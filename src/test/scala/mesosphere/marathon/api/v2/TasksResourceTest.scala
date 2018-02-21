@@ -27,7 +27,6 @@ import scala.concurrent.duration._
 class TasksResourceTest extends UnitTest with GroupCreation {
   case class Fixture(
       auth: TestAuthFixture = new TestAuthFixture,
-      service: MarathonSchedulerService = mock[MarathonSchedulerService],
       taskTracker: InstanceTracker = mock[InstanceTracker],
       stateOpProcessor: InstanceStateOpProcessor = mock[InstanceStateOpProcessor],
       taskKiller: TaskKiller = mock[TaskKiller],
@@ -296,7 +295,7 @@ class TasksResourceTest extends UnitTest with GroupCreation {
       val body = s"""{"ids": ["$taskId1", "$taskId2", "$taskId3"]}""".getBytes
 
       override val taskKiller = new TaskKiller(
-        taskTracker, stateOpProcessor, groupManager, service, config, auth.auth, auth.auth, killService)
+        taskTracker, stateOpProcessor, groupManager, config, auth.auth, auth.auth, killService)
       override val taskResource = new TasksResource(
         taskTracker,
         taskKiller,

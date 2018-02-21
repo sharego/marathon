@@ -23,7 +23,6 @@ class SpecInstancesResourceTest extends UnitTest with GroupCreation {
 
   case class Fixture(
       auth: TestAuthFixture = new TestAuthFixture,
-      service: MarathonSchedulerService = mock[MarathonSchedulerService],
       taskTracker: InstanceTracker = mock[InstanceTracker],
       stateOpProcessor: InstanceStateOpProcessor = mock[InstanceStateOpProcessor],
       taskKiller: TaskKiller = mock[TaskKiller],
@@ -46,7 +45,6 @@ class SpecInstancesResourceTest extends UnitTest with GroupCreation {
 
   case class FixtureWithRealTaskKiller(
       auth: TestAuthFixture = new TestAuthFixture,
-      service: MarathonSchedulerService = mock[MarathonSchedulerService],
       taskTracker: InstanceTracker = mock[InstanceTracker],
       stateOpProcessor: InstanceStateOpProcessor = mock[InstanceStateOpProcessor],
       healthCheckManager: HealthCheckManager = mock[HealthCheckManager],
@@ -55,7 +53,7 @@ class SpecInstancesResourceTest extends UnitTest with GroupCreation {
     val identity = auth.identity
     val killService = mock[KillService]
     val taskKiller = new TaskKiller(
-      taskTracker, stateOpProcessor, groupManager, service, config, auth.auth, auth.auth, killService)
+      taskTracker, stateOpProcessor, groupManager, config, auth.auth, auth.auth, killService)
     val appsTaskResource = new AppTasksResource(
       taskTracker,
       taskKiller,
