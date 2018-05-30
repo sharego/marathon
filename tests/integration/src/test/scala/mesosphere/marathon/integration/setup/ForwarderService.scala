@@ -4,15 +4,15 @@ package integration.setup
 import java.util.concurrent.{ConcurrentLinkedQueue, Executor}
 
 import javax.servlet.DispatcherType
-import javax.ws.rs.core.Response
-import javax.ws.rs.{GET, Path}
+import javax.ws.rs.core.{Context, HttpHeaders, Response}
+import javax.ws.rs.{GET, POST, Path}
 import akka.Done
 import akka.actor.ActorSystem
 import akka.actor.ActorRef
 import com.google.common.util.concurrent.Service
 import com.typesafe.scalalogging.StrictLogging
 import mesosphere.marathon.HttpConf
-import mesosphere.marathon.api.forwarder.{JavaUrlConnectionRequestForwarder, AsyncUrlConnectionRequestForwarder}
+import mesosphere.marathon.api.forwarder.{AsyncUrlConnectionRequestForwarder, JavaUrlConnectionRequestForwarder}
 import mesosphere.marathon.api.{HttpModule, RootApplication}
 import mesosphere.marathon.api._
 import mesosphere.marathon.core.election.{ElectionCandidate, ElectionService}
@@ -22,9 +22,10 @@ import org.eclipse.jetty.servlet.{FilterHolder, ServletHolder}
 import org.glassfish.jersey.server.ResourceConfig
 import org.glassfish.jersey.servlet.ServletContainer
 import org.rogach.scallop.ScallopConf
+import play.api.libs.json.{JsObject, JsString}
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{Future, Promise, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 
 /**
   * Helper that starts/stops the forwarder classes as java processes specifically for the integration test
@@ -132,6 +133,17 @@ object ForwarderService extends StrictLogging {
     @Path("/hello/crash")
     def crash(): Response = {
       Response.serverError().entity("Error").build()
+    }
+
+    @POST
+    @Path("/headers")
+    def headers(@Context headers: HttpHeaders): Response = {
+      val headersPairs = headers.getRequestHeaders.entrySet().asScala.toSeq.map { e =>
+        (e.getKey, JsString(e.getValue.toString))
+      }
+      val headersJson = JsObject(headersPairs)
+      val body = headersJson.toString()
+      Response.ok().entity(body).build()
     }
   }
 

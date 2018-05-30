@@ -2,6 +2,8 @@ package mesosphere.marathon
 package integration
 
 import java.net.URL
+
+import akka.http.scaladsl.client.RequestBuilding
 import mesosphere.marathon.api.forwarder.RequestForwarder
 import org.apache.commons.io.IOUtils
 import mesosphere.AkkaIntegrationTest
@@ -11,6 +13,7 @@ import mesosphere.util.PortAllocator
 import org.scalatest.concurrent.PatienceConfiguration
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.time.{Milliseconds, Seconds, Span}
+import play.api.libs.json.{JsObject, JsString}
 
 /**
   * Tests forwarding requests.
@@ -32,7 +35,7 @@ class ForwardToLeaderIntegrationTest extends AkkaIntegrationTest with TableDrive
       }
     }
 
-    s"ForwardingToLeader (async = ${async})" should {
+    s"ForwardingToLeader (async = $async)" should {
       "direct ping" in withForwarder { forwarder =>
         val helloApp = forwarder.startHelloApp()
         helloApp.launched.futureValue(forwarderStartTimeout, forwarderStartInterval) withClue "The hello app did not start in time"
@@ -189,6 +192,27 @@ class ForwardToLeaderIntegrationTest extends AkkaIntegrationTest with TableDrive
         val appFacade = new AppMockFacade()
         val result = appFacade.ping("localhost", port = forwardApp1.port).futureValue
         result should be(BadGateway)
+      }
+
+      "forwarding a POST request with no Content-Type header set" in withForwarder { forwarder =>
+        val helloApp = forwarder.startHelloApp()
+        helloApp.launched.futureValue(forwarderStartTimeout, forwarderStartInterval) withClue "The hello app did not start in time"
+        val forwardApp = forwarder.startForwarder(helloApp.port)
+        forwardApp.launched.futureValue(forwarderStartTimeout, forwarderStartInterval) withClue "The forwarder service did not start in time"
+
+        val appFacade = new AppMockFacade()
+        val result = appFacade.custom("/headers", RequestBuilding.Post)("localhost", port = forwardApp.port).futureValue
+
+        result should be(OK)
+
+        result.value.headers.count(_.name == RequestForwarder.HEADER_VIA) should be(1)
+        result.value.headers.find(_.name == RequestForwarder.HEADER_VIA).get.value should be(s"1.1 localhost:${forwardApp.port}")
+        result.value.headers.count(_.name == LeaderProxyFilter.HEADER_MARATHON_LEADER) should be(1)
+        result.value.headers.find(_.name == LeaderProxyFilter.HEADER_MARATHON_LEADER).get.value should be(s"http://localhost:${helloApp.port}")
+
+        val json = result.entityJson.asInstanceOf[JsObject]
+        val expectedContentType = if (async) None else Some("[application/json]")
+        (json \ "Content-Type").toOption.map(_.asInstanceOf[JsString].value) shouldEqual expectedContentType
       }
 
     }
