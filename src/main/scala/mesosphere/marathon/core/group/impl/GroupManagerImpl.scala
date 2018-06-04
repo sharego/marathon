@@ -202,13 +202,13 @@ class GroupManagerImpl(
         group.transitiveApps.size.toLong
       }
 
-      Metrics.gauge("mesosphere.marathon.apps", () => apps())
+      Metrics.gauge("marathon.apps", () => apps())
 
       def groups() = rootGroupOption().foldLeft(0L) { (_, group) =>
         group.transitiveGroupsById.size.toLong
       }
 
-      Metrics.gauge("mesosphere.marathon.groups", () => groups())
+      Metrics.gauge("marathon.groups", () => groups())
     }
   }
 }
