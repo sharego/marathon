@@ -8,7 +8,9 @@ import com.typesafe.scalalogging.StrictLogging
 import java.util
 import java.util.Collections
 import java.util.concurrent.TimeUnit
-import mesosphere.marathon.metrics.{Metrics, ServiceMetric, Timer}
+
+import kamon.metric.instrument.Time
+import mesosphere.marathon.metrics.{Metrics, Timer}
 import mesosphere.marathon.stream.EnrichedFlow
 import mesosphere.marathon.util.LifeCycledCloseableLike
 import org.apache.curator.framework.CuratorFramework
@@ -19,6 +21,7 @@ import org.apache.curator.framework.{AuthInfo, CuratorFrameworkFactory}
 import org.apache.curator.retry.ExponentialBackoffRetry
 import org.apache.zookeeper.{KeeperException, WatchedEvent, ZooDefs}
 import org.apache.zookeeper.data.ACL
+
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
@@ -69,7 +72,8 @@ object CuratorElectionStream extends StrictLogging {
       sq: SourceQueueWithComplete[LeadershipState]) extends Cancellable {
 
     val client = clientCloseable.closeable
-    private lazy val leaderHostPortMetric: Timer = Metrics.timer(ServiceMetric, getClass, "current-leader-host-port")
+    private lazy val leaderHostPortMetric: Timer =
+      Metrics.timer("marathon.leader.retrieval.duration", unit = Time.Seconds)
     private val curatorLeaderLatchPath = zooKeeperLeaderPath + "-curator"
     private lazy val latch = new LeaderLatch(client, curatorLeaderLatchPath, hostPort)
     private var isStarted = false

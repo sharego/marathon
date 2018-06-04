@@ -5,7 +5,7 @@ import akka.Done
 import com.typesafe.scalalogging.StrictLogging
 import mesosphere.marathon.core.instance.update.{InstanceChange, InstanceChangeHandler}
 import mesosphere.marathon.core.task.tracker.InstanceTrackerUpdateStepProcessor
-import mesosphere.marathon.metrics.{Metrics, ServiceMetric, Timer}
+import mesosphere.marathon.metrics.{Metrics, Timer}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -17,7 +17,7 @@ private[tracker] class InstanceTrackerUpdateStepProcessorImpl(
     steps: Seq[InstanceChangeHandler]) extends InstanceTrackerUpdateStepProcessor with StrictLogging {
 
   private[this] val stepTimers: Map[String, Timer] = steps.map { step =>
-    step.name -> Metrics.timer(ServiceMetric, getClass, s"step-${step.name}")
+    step.name -> Metrics.timer(s"marathon.instance.update.step.${step.name}.duration")
   }(collection.breakOut)
 
   logger.info(

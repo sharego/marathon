@@ -2,11 +2,12 @@ package mesosphere.marathon
 package core.task.update.impl
 
 import java.time.Clock
-import javax.inject.Inject
 
+import javax.inject.Inject
 import akka.event.EventStream
 import com.google.inject.name.Names
 import com.typesafe.scalalogging.StrictLogging
+import kamon.metric.instrument.Time
 import mesosphere.marathon.core.condition.Condition
 import mesosphere.marathon.core.event.UnknownInstanceTerminated
 import mesosphere.marathon.core.instance.Instance
@@ -14,7 +15,7 @@ import mesosphere.marathon.core.task.termination.{KillReason, KillService}
 import mesosphere.marathon.core.task.tracker.InstanceTracker
 import mesosphere.marathon.core.task.update.TaskStatusUpdateProcessor
 import mesosphere.marathon.core.task.{Task, TaskCondition}
-import mesosphere.marathon.metrics.{Metrics, ServiceMetric, Timer}
+import mesosphere.marathon.metrics.{Metrics, Timer}
 import org.apache.mesos.{Protos => MesosProtos}
 
 import scala.concurrent.Future
@@ -30,9 +31,11 @@ class TaskStatusUpdateProcessorImpl @Inject() (
     eventStream: EventStream) extends TaskStatusUpdateProcessor with StrictLogging {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  private[this] val publishTimer: Timer = Metrics.timer(ServiceMetric, getClass, "publishFuture")
+  private[this] val publishTimer: Timer =
+    Metrics.timer("marathon.task.status.update.publish.duration", unit = Time.Seconds)
 
-  private[this] val killUnknownTaskTimer: Timer = Metrics.timer(ServiceMetric, getClass, "killUnknownTask")
+  private[this] val killUnknownTaskTimer: Timer =
+    Metrics.timer("marathon.task.status.update.kill.unknown.task.duration", unit = Time.Seconds)
 
   logger.info("Started status update processor")
 

@@ -2,12 +2,11 @@ package mesosphere.marathon
 package core.group
 
 import javax.inject.Provider
-
 import akka.event.EventStream
-import kamon.Kamon
 import kamon.metric.instrument.Time
 import mesosphere.marathon.api.GroupApiService
 import mesosphere.marathon.core.group.impl.GroupManagerImpl
+import mesosphere.marathon.metrics.Metrics
 import mesosphere.marathon.plugin.auth.Authorizer
 import mesosphere.marathon.storage.repository.GroupRepository
 
@@ -25,9 +24,10 @@ class GroupManagerModule(
     val groupManager = new GroupManagerImpl(config, None, groupRepo, scheduler)
 
     val startedAt = System.currentTimeMillis()
-    Kamon.metrics.gauge("service.mesosphere.marathon.uptime", Time.Milliseconds)(
-      System.currentTimeMillis() - startedAt
-    )
+    Metrics.gauge(
+      "marathon.uptime.duration",
+      () => (System.currentTimeMillis() - startedAt) / 1000,
+      Time.Seconds)
 
     groupManager
   }

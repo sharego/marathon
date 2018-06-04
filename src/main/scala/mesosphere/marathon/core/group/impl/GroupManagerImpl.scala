@@ -9,7 +9,6 @@ import akka.event.EventStream
 import akka.stream.scaladsl.Source
 import akka.{Done, NotUsed}
 import com.typesafe.scalalogging.StrictLogging
-import kamon.Kamon
 import mesosphere.marathon.api.{Rejection, RejectionException}
 import mesosphere.marathon.api.v2.Validation
 import mesosphere.marathon.core.deployment.DeploymentPlan
@@ -17,7 +16,7 @@ import mesosphere.marathon.core.event.{GroupChangeFailed, GroupChangeSuccess}
 import mesosphere.marathon.core.group.{GroupManager, GroupManagerConfig}
 import mesosphere.marathon.core.instance.Instance
 import mesosphere.marathon.core.pod.PodDefinition
-import mesosphere.marathon.metrics.{Metrics, ServiceMetric}
+import mesosphere.marathon.metrics.Metrics
 import mesosphere.marathon.state._
 import mesosphere.marathon.storage.repository.GroupRepository
 import mesosphere.marathon.upgrade.GroupVersioningUtil
@@ -50,8 +49,8 @@ class GroupManagerImpl(
     */
   private[this] val root = LockedVar(initialRoot)
 
-  private[this] val dismissedDeploymentsMetric = Metrics.counter(ServiceMetric, getClass, "dismissedDeployments")
-  private[this] val groupUpdateSizeMetric = Metrics.minMaxCounter(ServiceMetric, getClass, "queueSize")
+  private[this] val dismissedDeploymentsMetric = Metrics.counter("marathon.deployments.dismissed.total")
+  private[this] val groupUpdateSizeMetric = Metrics.atomicGauge("marathon.deployments.queue.size")
 
   @SuppressWarnings(Array("OptionGet"))
   override def rootGroup(): RootGroup =
@@ -198,17 +197,18 @@ class GroupManagerImpl(
   private[this] def registerMetrics(): Unit = {
     if (metricsRegistered.compareAndSet(false, true)) {
       // We've already released metrics using these names, so we can't use the Metrics.* methods
-      Kamon.metrics.gauge("service.mesosphere.marathon.app.count") {
-        rootGroupOption().foldLeft(0L) { (_, group) =>
-          group.transitiveApps.size.toLong
-        }
+
+      def apps() = rootGroupOption().foldLeft(0L) { (_, group) =>
+        group.transitiveApps.size.toLong
       }
 
-      Kamon.metrics.gauge("service.mesosphere.marathon.group.count") {
-        rootGroupOption().foldLeft(0L) { (_, group) =>
-          group.transitiveGroupsById.size.toLong
-        }
+      Metrics.gauge("mesosphere.marathon.apps", () => apps())
+
+      def groups() = rootGroupOption().foldLeft(0L) { (_, group) =>
+        group.transitiveGroupsById.size.toLong
       }
+
+      Metrics.gauge("mesosphere.marathon.groups", () => groups())
     }
   }
 }

@@ -7,8 +7,12 @@ package object metrics {
     if (klass.getName.contains("$EnhancerByGuice$")) klass.getSuperclass.getName else klass.getName
   }
 
-  def name(prefix: MetricPrefix, klass: Class[_], name: String): String = {
-    s"${prefix.name}.${className(klass)}.$name".replace('$', '.').replaceAll("""\.+""", ".")
+  def name(originalName: String): String = {
+    originalName.replace('$', '.').replaceAll("""\.+""", ".")
+  }
+
+  def name(prefix: MetricPrefix, klass: Class[_], originalName: String): String = {
+    name(s"${prefix.name}.${className(klass)}.$originalName")
   }
 
   def name(prefix: MetricPrefix, in: MethodInvocation): String = {

@@ -15,7 +15,7 @@ import mesosphere.marathon.core.launchqueue.LaunchQueue
 import mesosphere.marathon.core.readiness.{ReadinessCheckExecutor, ReadinessCheckResult}
 import mesosphere.marathon.core.task.termination.KillService
 import mesosphere.marathon.core.task.tracker.InstanceTracker
-import mesosphere.marathon.metrics.{Metrics, ServiceMetric}
+import mesosphere.marathon.metrics.Metrics
 import mesosphere.marathon.storage.repository.DeploymentRepository
 
 import scala.async.Async.{async, await}
@@ -138,8 +138,8 @@ class DeploymentManagerActor(
   val runningDeployments: mutable.Map[String, DeploymentInfo] = mutable.Map.empty
   val deploymentStatus: mutable.Map[String, DeploymentStepInfo] = mutable.Map.empty
 
-  private[this] val runningDeploymentsMetric = Metrics.minMaxCounter(ServiceMetric, getClass, "currentDeploymentCount")
-  private[this] val totalDeploymentsMetric = Metrics.minMaxCounter(ServiceMetric, getClass, "deploymentCount")
+  private[this] val runningDeploymentsMetric = Metrics.atomicGauge("marathon.deployments.running")
+  private[this] val totalDeploymentsMetric = Metrics.counter("marathon.deployments.total")
 
   override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy() {
     case NonFatal(e) => Stop

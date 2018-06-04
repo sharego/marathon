@@ -5,7 +5,7 @@ import akka.{Done, NotUsed}
 import akka.actor.{ActorRef, ActorSystem, Cancellable, PoisonPill}
 import akka.event.EventStream
 import akka.stream.ClosedShape
-import akka.stream.scaladsl.{Broadcast, GraphDSL, RunnableGraph, Flow, Sink, Source, Keep}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Keep, RunnableGraph, Sink, Source}
 import akka.stream.OverflowStrategy
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.StrictLogging
@@ -13,8 +13,10 @@ import kamon.Kamon
 import kamon.metric.instrument.Time
 import mesosphere.marathon.core.async.ExecutionContexts
 import mesosphere.marathon.core.base.CrashStrategy
+import mesosphere.marathon.metrics.Metrics
 import mesosphere.marathon.stream.EnrichedFlow
 import mesosphere.marathon.util.CancellableOnce
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -331,12 +333,12 @@ class ElectionServiceImpl(
 }
 
 object ElectionService extends StrictLogging {
-  private val leaderDurationMetric = "service.mesosphere.marathon.leaderDuration"
+  private val leaderDurationMetric = "marathon.leadership.duration.seconds"
 
   val metricsSink = Sink.foreach[LeadershipTransition] {
     case LeadershipTransition.ElectedAsLeaderAndReady =>
       val startedAt = System.currentTimeMillis()
-      Kamon.metrics.gauge(leaderDurationMetric, Time.Milliseconds)(System.currentTimeMillis() - startedAt)
+      Metrics.gauge(leaderDurationMetric, () => (System.currentTimeMillis() - startedAt) / 1000, Time.Seconds)
     case LeadershipTransition.Standby =>
       Kamon.metrics.removeGauge(leaderDurationMetric)
   }

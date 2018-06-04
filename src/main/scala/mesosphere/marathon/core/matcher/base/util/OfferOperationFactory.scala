@@ -3,7 +3,7 @@ package core.matcher.base.util
 
 import mesosphere.marathon.core.launcher.InstanceOpFactory
 import mesosphere.marathon.core.launcher.impl.ReservationLabels
-import mesosphere.marathon.metrics.{Metrics, ServiceMetric}
+import mesosphere.marathon.metrics.Metrics
 import mesosphere.marathon.state.VolumeMount
 import mesosphere.marathon.stream.Implicits._
 import mesosphere.mesos.protos.ResourceProviderID
@@ -14,9 +14,9 @@ class OfferOperationFactory(
     private val principalOpt: Option[String],
     private val roleOpt: Option[String]) {
 
-  private[this] val launchOperationCountMetric = Metrics.counter(ServiceMetric, getClass, "launchOperationCount")
-  private[this] val launchGroupOperationCountMetric = Metrics.counter(ServiceMetric, getClass, "launchGroupOperationCount")
-  private[this] val reserveOperationCountMetric = Metrics.counter(ServiceMetric, getClass, "reserveOperationCount")
+  private[this] val launchOperationCountMetric = Metrics.counter("marathon.launch.operations.total")
+  private[this] val launchGroupOperationCountMetric = Metrics.counter("marathon.launch.group.operations.total")
+  private[this] val reserveOperationCountMetric = Metrics.counter("marathon.reserve.operations.total")
 
   private[this] lazy val role: String = roleOpt match {
     case Some(value) => value

@@ -10,6 +10,7 @@ import akka.event.LoggingReceive
 import akka.pattern.pipe
 import akka.util.Timeout
 import com.typesafe.scalalogging.StrictLogging
+import kamon.metric.instrument.Time
 import mesosphere.marathon.core.instance.Instance
 import mesosphere.marathon.core.instance.update.{InstanceUpdateEffect, InstanceUpdateOpResolver}
 import mesosphere.marathon.core.task.tracker.impl.InstanceTrackerActor.UpdateContext
@@ -36,16 +37,17 @@ object InstanceUpdateActor {
 
   class ActorMetrics {
     /** the number of ops that are for instances that already have an op ready */
-    val numberOfQueuedOps: SettableGauge = Metrics.atomicGauge(ServiceMetric, classOf[InstanceUpdateActor], "delayed-ops")
+    val numberOfQueuedOps: SettableGauge = Metrics.atomicGauge("marathon.instance.update.ops.delayed")
 
     /** the number of currently processed ops */
-    val numberOfActiveOps: SettableGauge = Metrics.atomicGauge(ServiceMetric, classOf[InstanceUpdateActor], "ready-ops")
+    val numberOfActiveOps: SettableGauge = Metrics.atomicGauge("marathon.instance.update.ops.ready")
 
     /** the number of ops that we rejected because of a timeout */
-    val timedOutOpsMeter: SettableGauge = Metrics.atomicGauge(ServiceMetric, classOf[InstanceUpdateActor], "ops-timeout")
+    val timedOutOpsMeter: SettableGauge = Metrics.atomicGauge("marathon.instance.update.ops.timeout")
 
     /** a timer around op processing */
-    val processOpTimer: Timer = Metrics.timer(ServiceMetric, classOf[InstanceUpdateActor], "process-op")
+    val processOpTimer: Timer =
+      Metrics.timer("marathon.instance.update.ops.process.duration", unit = Time.Seconds)
   }
 }
 

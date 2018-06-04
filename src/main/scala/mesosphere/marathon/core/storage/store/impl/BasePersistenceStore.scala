@@ -9,8 +9,9 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import akka.{Done, NotUsed}
 import com.typesafe.scalalogging.StrictLogging
+import kamon.metric.instrument.Time
 import mesosphere.marathon.core.storage.store.{IdResolver, PersistenceStore}
-import mesosphere.marathon.metrics.{Metrics, ServiceMetric, Timer}
+import mesosphere.marathon.metrics.{Metrics, Timer}
 import mesosphere.marathon.util.KeyedLock
 
 import scala.async.Async.{async, await}
@@ -35,11 +36,11 @@ case class CategorizedKey[C, K](category: C, key: K)
 abstract class BasePersistenceStore[K, Category, Serialized](implicit
     ctx: ExecutionContext,
     mat: Materializer) extends PersistenceStore[K, Category, Serialized] with StrictLogging {
-  private val idsTimer: Timer = Metrics.timer(ServiceMetric, getClass, "ids")
-  private val getTimer: Timer = Metrics.timer(ServiceMetric, getClass, "get")
-  private val deleteTimer: Timer = Metrics.timer(ServiceMetric, getClass, "delete")
-  private val storeTimer: Timer = Metrics.timer(ServiceMetric, getClass, "store")
-  private val versionTimer: Timer = Metrics.timer(ServiceMetric, getClass, "versions")
+  private val idsTimer: Timer = Metrics.timer("marathon.storage.op.ids.duration", unit = Time.Seconds)
+  private val getTimer: Timer = Metrics.timer("marathon.storage.op.get.duration", unit = Time.Seconds)
+  private val deleteTimer: Timer = Metrics.timer("marathon.storage.op.delete.duration", unit = Time.Seconds)
+  private val storeTimer: Timer = Metrics.timer("marathon.storage.op.store.duration", unit = Time.Seconds)
+  private val versionTimer: Timer = Metrics.timer("marathon.storage.op.versions.duration", unit = Time.Seconds)
 
   private[this] lazy val lock = KeyedLock[String]("persistenceStore", Int.MaxValue)
 

@@ -13,7 +13,7 @@ import mesosphere.marathon.Protos.StorageVersion
 import mesosphere.marathon.core.storage.backup.BackupItem
 import mesosphere.marathon.core.storage.store.impl.BasePersistenceStore
 import mesosphere.marathon.core.storage.store.{IdResolver, PersistenceStore}
-import mesosphere.marathon.metrics.{Counter, Metrics, ServiceMetric}
+import mesosphere.marathon.metrics.{Counter, Metrics}
 import mesosphere.marathon.storage.VersionCacheConfig
 import mesosphere.marathon.stream.Sink
 import mesosphere.marathon.util.KeyedLock
@@ -60,7 +60,7 @@ case class LazyCachingPersistenceStore[K, Category, Serialized](
       if (idCache.contains(category)) {
         // TODO - remove special name when MARATHON-7618 is addressed
         idsHitCounters.getOrElseUpdate(ir.category, Metrics.counter(
-          ServiceMetric, getClass, s"ids.${ir.category}.hit", Map("result" -> "hit", "category" -> ir.category.toString))).increment()
+          s"marathon.storage.op.ids.${ir.category}.hit", Map("result" -> "hit", "category" -> ir.category.toString))).increment()
         Future.successful(idCache(category).asInstanceOf[Set[Id]])
       } else {
         async {
@@ -116,7 +116,7 @@ case class LazyCachingPersistenceStore[K, Category, Serialized](
         case Some(v: Option[V] @unchecked) =>
           // TODO - remove special name when MARATHON-7618 is addressed
           getHitCounters.getOrElseUpdate(ir.category, Metrics.counter(
-            ServiceMetric, getClass, s"get.${ir.category}.hit", Map("result" -> "hit", "category" -> ir.category.toString))).increment()
+            s"marathon.storage.op.get.${ir.category}.hit", Map("result" -> "hit", "category" -> ir.category.toString))).increment()
           Future.successful(v)
         case _ =>
           async { // linter:ignore UnnecessaryElseBranch
@@ -286,7 +286,7 @@ case class LazyVersionCachingPersistentStore[K, Category, Serialized](
       case Some(v: Option[V] @unchecked) =>
         // TODO - remove special name when MARATHON-7618 is addressed
         hitCounters.getOrElseUpdate(ir.category, Metrics.counter(
-          ServiceMetric, getClass, s"get.${ir.category}.hit", Map("result" -> "hit", "category" -> ir.category.toString))).increment()
+          s"marathon.storage.op.get.${ir.category}.hit", Map("result" -> "hit", "category" -> ir.category.toString))).increment()
         Future.successful(v)
       case _ =>
         async {

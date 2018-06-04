@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.StrictLogging
 import mesosphere.marathon.core.election.{ElectionService, LeadershipTransition}
 import mesosphere.marathon.core.event.MarathonEvent
 import mesosphere.marathon.core.event.impl.stream.HttpEventStreamActor._
-import mesosphere.marathon.metrics.{ApiMetric, Metrics, SettableGauge}
+import mesosphere.marathon.metrics.{Metrics, SettableGauge}
 
 import scala.util.Try
 
@@ -21,7 +21,7 @@ trait HttpEventStreamHandle {
 }
 
 class HttpEventStreamActorMetrics() {
-  val numberOfStreams: SettableGauge = Metrics.atomicGauge(ApiMetric, getClass, "number-of-streams")
+  val numberOfStreams: SettableGauge = Metrics.atomicGauge("marathon.http.event.streams")
 }
 
 /**

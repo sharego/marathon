@@ -9,9 +9,9 @@ import akka.pattern._
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import com.typesafe.scalalogging.StrictLogging
-import kamon.Kamon
 import kamon.metric.instrument.Time
 import mesosphere.marathon.core.deployment.DeploymentPlan
+import mesosphere.marathon.metrics.Metrics
 import mesosphere.marathon.state.{PathId, RootGroup}
 import mesosphere.marathon.storage.repository.GcActor.{CompactDone, _}
 import mesosphere.marathon.stream.Sink
@@ -80,11 +80,11 @@ private[storage] class GcActor[K, C, S](
   extends FSM[State, Data] with LoggingFSM[State, Data] with ScanBehavior[K, C, S] with CompactBehavior[K, C, S] {
 
   // We already released metrics with these names, so we can't use the Metrics.* methods
-  private val totalGcs = Kamon.metrics.counter("GarbageCollector.totalGcs")
+  private val totalGcs = Metrics.counter("marathon.gc.runs.total")
   private var lastScanStart = Instant.now()
-  private val scanTime = Kamon.metrics.histogram("GarbageCollector.scanTime", Time.Milliseconds)
+  private val scanTime = Metrics.histogram("marathon.gc.scan.duration", unit = Time.Seconds)
   private var lastCompactStart = Instant.now()
-  private val compactTime = Kamon.metrics.histogram("GarbageCollector.compactTime", Time.Milliseconds)
+  private val compactTime = Metrics.histogram("marathon.gc.compact.duration", unit = Time.Seconds)
 
   if (cleaningInteveral <= 0.millis) {
     startWith(ReadyForGc, EmptyData)

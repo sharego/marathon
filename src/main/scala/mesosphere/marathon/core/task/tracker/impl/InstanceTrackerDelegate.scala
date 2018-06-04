@@ -11,7 +11,7 @@ import akka.util.Timeout
 import mesosphere.marathon.core.instance.Instance
 import mesosphere.marathon.core.instance.update.{InstanceUpdateEffect, InstanceUpdateOperation}
 import mesosphere.marathon.core.task.tracker.{InstanceTracker, InstanceTrackerConfig}
-import mesosphere.marathon.metrics.{Metrics, ServiceMetric}
+import mesosphere.marathon.metrics.Metrics
 import mesosphere.marathon.state.{PathId, Timestamp}
 import org.apache.mesos
 
@@ -63,7 +63,7 @@ private[tracker] class InstanceTrackerDelegate(
   override def instance(taskId: Instance.Id): Future[Option[Instance]] =
     (instanceTrackerRef ? InstanceTrackerActor.Get(taskId)).mapTo[Option[Instance]]
 
-  private[this] val tasksByAppTimer = Metrics.timer(ServiceMetric, getClass, "tasksByApp")
+  private[this] val tasksByAppTimer = Metrics.timer("marathon.tasks.retrieval.duration")
 
   implicit val instanceTrackerQueryTimeout: Timeout = config.internalTaskTrackerRequestTimeout().milliseconds
 

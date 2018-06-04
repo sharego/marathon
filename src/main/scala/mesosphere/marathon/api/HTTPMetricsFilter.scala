@@ -3,15 +3,18 @@ package api
 
 import javax.servlet._
 import javax.servlet.http.{HttpServletRequest, HttpServletRequestWrapper, HttpServletResponse, HttpServletResponseWrapper}
-import mesosphere.marathon.metrics.{Metrics, ServiceMetric}
+import kamon.metric.instrument.Memory
+import mesosphere.marathon.metrics.Metrics
 
 /**
   * This filter replaces the default I/O streams with proxies that count
   * the number of bytes that are sent to and from the client.
   */
 class HTTPMetricsFilter extends Filter {
-  private[this] val bytesReadMetric = Metrics.counter(ServiceMetric, getClass, "bytesRead")
-  private[this] val bytesWrittenMetric = Metrics.counter(ServiceMetric, getClass, "bytesWritten")
+  private[this] val bytesReadMetric =
+    Metrics.counter("marathon.http.data.read.bytes.total", unit = Memory.Bytes)
+  private[this] val bytesWrittenMetric =
+    Metrics.counter("marathon.http.data.written.bytes.total", unit = Memory.Bytes)
 
   /**
     * Wraps a `ServletOutputStream` and overrides the `write` method in
@@ -119,8 +122,8 @@ class HTTPMetricsFilter extends Filter {
 
     // Since the filter processing is synchronous, when the execution reaches this point
     // the counters should be populated. This is where we push the values to Kamon.
-    bytesReadMetric.increment(inputCounter.bytesRead)
-    bytesWrittenMetric.increment(outputCounter.bytesWritten)
+    bytesReadMetric.increment(inputCounter.bytesRead.toLong)
+    bytesWrittenMetric.increment(outputCounter.bytesWritten.toLong)
   }
 
   override def init(filterConfig: FilterConfig): Unit = {}

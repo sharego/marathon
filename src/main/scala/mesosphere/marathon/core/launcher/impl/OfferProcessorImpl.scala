@@ -4,11 +4,12 @@ package core.launcher.impl
 import akka.Done
 import akka.stream.scaladsl.SourceQueue
 import com.typesafe.scalalogging.StrictLogging
+import kamon.metric.instrument.Time
 import mesosphere.marathon.core.launcher.{InstanceOp, OfferProcessor, OfferProcessorConfig, TaskLauncher}
 import mesosphere.marathon.core.matcher.base.OfferMatcher
 import mesosphere.marathon.core.matcher.base.OfferMatcher.{InstanceOpWithSource, MatchedInstanceOps}
 import mesosphere.marathon.core.task.tracker.InstanceTracker
-import mesosphere.marathon.metrics.{Metrics, ServiceMetric}
+import mesosphere.marathon.metrics.Metrics
 import org.apache.mesos.Protos.{Offer, OfferID}
 
 import scala.concurrent.Future
@@ -55,16 +56,11 @@ private[launcher] class OfferProcessorImpl(
     offerStreamInput: SourceQueue[Offer]) extends OfferProcessor with StrictLogging {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  private[this] val incomingOffersMeter =
-    Metrics.minMaxCounter(ServiceMetric, getClass, "incomingOffers")
-  private[this] val matchTimeMeter =
-    Metrics.timer(ServiceMetric, getClass, "matchTime")
-  private[this] val matchErrorsMeter =
-    Metrics.minMaxCounter(ServiceMetric, getClass, "matchErrors")
-  private[this] val savingTasksTimeMeter =
-    Metrics.timer(ServiceMetric, getClass, "savingTasks")
-  private[this] val savingTasksErrorMeter =
-    Metrics.minMaxCounter(ServiceMetric, getClass, "savingTasksErrors")
+  private[this] val incomingOffersMeter = Metrics.counter("marathon.offers.incoming.total")
+  private[this] val matchTimeMeter = Metrics.timer("marathon.offers.match.duration", unit = Time.Seconds)
+  private[this] val matchErrorsMeter = Metrics.counter("marathon.offers.match.errors.total")
+  private[this] val savingTasksTimeMeter = Metrics.timer("marathon.tasks.saving.duration", unit = Time.Seconds)
+  private[this] val savingTasksErrorMeter = Metrics.counter("marathon.tasks.saving.errors.total")
 
   override def processOffer(offer: Offer): Future[Done] = {
     incomingOffersMeter.increment()

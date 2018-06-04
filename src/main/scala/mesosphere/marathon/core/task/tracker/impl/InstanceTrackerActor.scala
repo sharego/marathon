@@ -9,9 +9,9 @@ import com.typesafe.scalalogging.StrictLogging
 import mesosphere.marathon.core.appinfo.TaskCounts
 import mesosphere.marathon.core.instance.Instance
 import mesosphere.marathon.core.instance.update.{InstanceChange, InstanceDeleted, InstanceUpdateEffect, InstanceUpdateOperation, InstanceUpdated}
-import mesosphere.marathon.core.task.tracker.impl.InstanceTrackerActor.{UpdateContext, RepositoryStateUpdated}
+import mesosphere.marathon.core.task.tracker.impl.InstanceTrackerActor.{RepositoryStateUpdated, UpdateContext}
 import mesosphere.marathon.core.task.tracker.{InstanceTracker, InstanceTrackerUpdateStepProcessor}
-import mesosphere.marathon.metrics.AtomicGauge
+import mesosphere.marathon.metrics.{Metrics, SettableGauge}
 import mesosphere.marathon.state.{PathId, Timestamp}
 import mesosphere.marathon.storage.repository.InstanceRepository
 
@@ -56,8 +56,8 @@ object InstanceTrackerActor {
 
   private[tracker] class ActorMetrics {
     // We can't use Metrics as we need custom names for compatibility.
-    val stagedCount: AtomicGauge = AtomicGauge("service.mesosphere.marathon.task.staged.count")
-    val runningCount: AtomicGauge = AtomicGauge("service.mesosphere.marathon.task.running.count")
+    val stagedCount: SettableGauge = Metrics.atomicGauge("marathon.tasks.staged")
+    val runningCount: SettableGauge = Metrics.atomicGauge("marathon.tasks.running")
 
     def resetMetrics(): Unit = {
       stagedCount.setValue(0)

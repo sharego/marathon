@@ -5,7 +5,7 @@ import java.util.Collections
 
 import com.typesafe.scalalogging.StrictLogging
 import mesosphere.marathon.core.launcher.{InstanceOp, TaskLauncher}
-import mesosphere.marathon.metrics.{Metrics, ServiceMetric}
+import mesosphere.marathon.metrics.Metrics
 import mesosphere.marathon.stream.Implicits._
 import org.apache.mesos.Protos.{OfferID, Status}
 import org.apache.mesos.{Protos, SchedulerDriver}
@@ -13,9 +13,9 @@ import org.apache.mesos.{Protos, SchedulerDriver}
 private[launcher] class TaskLauncherImpl(
     marathonSchedulerDriverHolder: MarathonSchedulerDriverHolder) extends TaskLauncher with StrictLogging {
 
-  private[this] val usedOffersMeter = Metrics.minMaxCounter(ServiceMetric, getClass, "usedOffers")
-  private[this] val launchedTasksMeter = Metrics.minMaxCounter(ServiceMetric, getClass, "launchedTasks")
-  private[this] val declinedOffersMeter = Metrics.minMaxCounter(ServiceMetric, getClass, "declinedOffers")
+  private[this] val usedOffersMeter = Metrics.counter("marathon.offers.used.total")
+  private[this] val launchedTasksMeter = Metrics.counter("marathon.tasks.launched.total")
+  private[this] val declinedOffersMeter = Metrics.counter("marathon.offers.declined.total")
 
   override def acceptOffer(offerID: OfferID, taskOps: Seq[InstanceOp]): Boolean = {
     val accepted = withDriver(s"launchTasks($offerID)") { driver =>

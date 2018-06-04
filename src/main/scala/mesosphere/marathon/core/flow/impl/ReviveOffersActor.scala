@@ -9,7 +9,7 @@ import com.typesafe.scalalogging.StrictLogging
 import mesosphere.marathon.core.flow.ReviveOffersConfig
 import mesosphere.marathon.core.flow.impl.ReviveOffersActor.OffersWanted
 import mesosphere.marathon.core.event.{SchedulerRegisteredEvent, SchedulerReregisteredEvent}
-import mesosphere.marathon.metrics.{Metrics, ServiceMetric}
+import mesosphere.marathon.metrics.Metrics
 import mesosphere.marathon.state.Timestamp
 import rx.lang.scala.{Observable, Subscription}
 
@@ -37,7 +37,7 @@ private[impl] class ReviveOffersActor(
     offersWanted: Observable[Boolean],
     driverHolder: MarathonSchedulerDriverHolder) extends Actor with StrictLogging {
 
-  private[this] val reviveCountMetric = Metrics.minMaxCounter(ServiceMetric, getClass, "reviveCount")
+  private[this] val reviveCountMetric = Metrics.counter("marathon.revive.ops.total")
 
   private[impl] var subscription: Subscription = _
   private[impl] var offersCurrentlyWanted: Boolean = false

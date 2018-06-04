@@ -17,16 +17,16 @@ class MetricsIntegrationTest extends AkkaIntegrationTest with EmbeddedMarathonTe
       Then("The system responds as expected")
       result should be(OK)
       result.entityJson.as[JsObject].keys should contain("counters")
-      result.entityJson("counters").as[JsObject].keys should contain("service.mesosphere.marathon.api.HTTPMetricsFilter.bytesWritten")
+      result.entityJson("counters").as[JsObject].keys should contain("marathon.http.data.written.bytes.total")
 
       And("The `outputBytes` is increased as expected")
-      val currentCounter = result.entityJson("counters")("service.mesosphere.marathon.api.HTTPMetricsFilter.bytesWritten")("count").as[Int]
+      val currentCounter = result.entityJson("counters")("marathon.http.data.written.bytes.total")("count").as[Int]
 
       // Give some time to Kamon to take a metrics snapshot.
       Thread.sleep(3000)
 
       val newResult = marathon.metrics()
-      val newCounter = newResult.entityJson("counters")("service.mesosphere.marathon.api.HTTPMetricsFilter.bytesWritten")("count").as[Int]
+      val newCounter = newResult.entityJson("counters")("marathon.http.data.written.bytes.total")("count").as[Int]
       newCounter shouldBe >=(currentCounter + result.entityString.length)
 
     }
@@ -39,10 +39,10 @@ class MetricsIntegrationTest extends AkkaIntegrationTest with EmbeddedMarathonTe
       Then("The system responds as expected")
       result should be(OK)
       result.entityJson.as[JsObject].keys should contain("counters")
-      result.entityJson("counters").as[JsObject].keys should contain("service.mesosphere.marathon.api.HTTPMetricsFilter.bytesRead")
+      result.entityJson("counters").as[JsObject].keys should contain("marathon.http.data.read.bytes.total")
 
       And("The `inputBytes` is increased as expected")
-      val currentCounter = result.entityJson("counters")("service.mesosphere.marathon.api.HTTPMetricsFilter.bytesRead")("count").as[Int]
+      val currentCounter = result.entityJson("counters")("marathon.http.data.read.bytes.total")("count").as[Int]
       val requestObj = GroupUpdate(id = Some("/empty"))
       val requestJson = Json.toJson(requestObj).toString()
       marathon.createGroup(requestObj)
@@ -51,7 +51,7 @@ class MetricsIntegrationTest extends AkkaIntegrationTest with EmbeddedMarathonTe
       Thread.sleep(3000)
 
       val newResult = marathon.metrics()
-      val newCounter = newResult.entityJson("counters")("service.mesosphere.marathon.api.HTTPMetricsFilter.bytesRead")("count").as[Int]
+      val newCounter = newResult.entityJson("counters")("marathon.http.data.read.bytes.total")("count").as[Int]
       newCounter shouldBe >=(currentCounter + requestJson.length)
 
     }
