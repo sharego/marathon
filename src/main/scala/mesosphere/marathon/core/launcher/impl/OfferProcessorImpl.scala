@@ -2,7 +2,6 @@ package mesosphere.marathon
 package core.launcher.impl
 
 import akka.Done
-import akka.stream.scaladsl.SourceQueue
 import com.typesafe.scalalogging.StrictLogging
 import mesosphere.marathon.core.launcher.{InstanceOp, OfferProcessor, OfferProcessorConfig, TaskLauncher}
 import mesosphere.marathon.core.matcher.base.OfferMatcher
@@ -51,8 +50,7 @@ private[launcher] class OfferProcessorImpl(
     conf: OfferProcessorConfig,
     offerMatcher: OfferMatcher,
     taskLauncher: TaskLauncher,
-    instanceTracker: InstanceTracker,
-    offerStreamInput: SourceQueue[Offer]) extends OfferProcessor with StrictLogging {
+    instanceTracker: InstanceTracker) extends OfferProcessor with StrictLogging {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   private[this] val incomingOffersMeter =
@@ -68,7 +66,6 @@ private[launcher] class OfferProcessorImpl(
 
   override def processOffer(offer: Offer): Future[Done] = {
     incomingOffersMeter.increment()
-    offerStreamInput.offer(offer)
 
     val matchFuture: Future[MatchedInstanceOps] = matchTimeMeter {
       offerMatcher.matchOffer(offer)
