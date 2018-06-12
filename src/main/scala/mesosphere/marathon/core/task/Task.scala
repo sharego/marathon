@@ -70,6 +70,7 @@ case class Task(taskId: Task.Id, runSpecVersion: Timestamp, status: Task.Status)
   private[this] def hasStartedRunning: Boolean = status.startedAt.isDefined
 
   /** apply the given operation to a task */
+  // Replace condition with Phase; derive condition from phase.
   def update(instance: Instance, newStatus: Condition, newMesosStatus: MesosProtos.TaskStatus, now: Timestamp): TaskUpdateEffect = {
 
     // Exceptional case: the task is already terminal. Don't transition in this case.
@@ -86,7 +87,7 @@ case class Task(taskId: Task.Id, runSpecVersion: Timestamp, status: Task.Status)
     newStatus match {
 
       // case 1: running
-      case Condition.Running if !hasStartedRunning =>
+      case Condition.Running if !hasStartedRunning =
         val updatedNetworkInfo = status.networkInfo.update(newMesosStatus)
         val updatedTask = copy(status = status.copy(
           mesosStatus = Some(newMesosStatus),

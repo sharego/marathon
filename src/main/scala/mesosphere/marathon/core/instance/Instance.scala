@@ -91,6 +91,7 @@ object Instance {
     * @param activeSince Denotes the first task startedAt timestamp if any.
     * @param healthy Tells if all tasks run healthily if health checks have been enabled.
     */
+  // TODO - derive instance condition from task phase
   case class InstanceState(condition: Condition, since: Timestamp, activeSince: Option[Timestamp], healthy: Option[Boolean])
 
   object InstanceState {
